@@ -1,0 +1,16 @@
+<header>
+  <h1>Equipment leasing</h1>
+  <nav>
+    <a routerLink="/applications">Applications</a>
+    <a routerLink="/assessments">Assessments</a>
+    <a routerLink="/quotes">Quotes</a>
+    <a routerLink="/leases">Leases</a>
+    <a routerLink="/admin/portfolio">Portfolio</a>
+  </nav>
+  @if (hub.assignedTasks().length > 0) {
+    <p class="tasks">{{ hub.assignedTasks().length }} new task(s) for your team</p>
+  }
+</header>
+<main>
+  <router-outlet />
+</main>
