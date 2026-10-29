@@ -1,0 +1,163 @@
+# Ground truth for lab-web, written from its source only (no README, no engine output).
+# Each item: question, expected answer, file:line evidence. Any later change is logged with reason and evidence.
+# Cross-repository targets name the lab-leasing source at 3571aa117e858d7924d909af1c972b7764b442f2.
+repository: lab-web
+sourceCommit: 6353ca4d39f9a42daa2b767cfef4605ff3ba0316
+items:
+  - id: web-framework
+    area: packages
+    question: Which Angular and SignalR client versions does the app use?
+    expected: "@angular/core ^22.2.0 and @microsoft/signalr ^10.0.11."
+    evidence:
+      - package.json:16
+      - package.json:20
+
+  - id: web-base-url
+    area: config
+    question: Where does the backend base URL come from, per build configuration?
+    expected: environment.apiUrl. Production build (environment.ts) uses https://app-lab-leasing-dev.azurewebsites.net; the development configuration replaces it with environment.development.ts, http://localhost:5080. hubPath is /hubs/leasing in both.
+    evidence:
+      - src/environments/environment.ts:3
+      - src/environments/environment.ts:4
+      - src/environments/environment.development.ts:3
+      - src/environments/environment.development.ts:4
+      - angular.json:51
+
+  - id: web-routes
+    area: routing
+    question: Which routes does the app define, and how are they loaded?
+    expected:
+      - "'' redirects to applications"
+      - "applications: lazy children (list at '', ApplicationDetail at ':flowId')"
+      - "assessments: lazy component AssessmentList"
+      - "quotes: lazy children (QuoteList, QuoteDetail at ':flowId')"
+      - "leases: lazy children (LeaseList, LeaseDetail at ':flowId')"
+      - "admin/portfolio: lazy component Portfolio"
+    evidence:
+      - src/app/app.routes.ts:4
+      - src/app/app.routes.ts:5
+      - src/app/app.routes.ts:6
+      - src/app/app.routes.ts:7
+      - src/app/app.routes.ts:8
+      - src/app/app.routes.ts:9
+      - src/app/features/applications/applications.routes.ts:5
+      - src/app/features/quotes/quotes.routes.ts:5
+      - src/app/features/leases/leases.routes.ts:5
+
+  - id: web-http-calls
+    area: http
+    question: Which HTTP calls do the services make, and which lab-leasing endpoint answers each?
+    expected:
+      - "ApplicationsService.search: GET {apiUrl}/v1/applications (query status, q) -> ApplicationsController.Search"
+      - "ApplicationsService.get: GET {apiUrl}/v1/applications/{flowId} -> ApplicationsController.Get"
+      - "ApplicationsService.review: POST {apiUrl}/v1/applications/{flowId}/review -> ApplicationsController.Review"
+      - "ApplicationsService.withdraw: POST {apiUrl}/v1/applications/{flowId}/actions/withdraw -> ApplicationsController.Withdraw"
+      - "AssessmentsService.list: GET {apiUrl}/v1/assessments -> AssessmentsController.Search"
+      - "AssessmentsService.assess: POST {apiUrl}/v1/assessments/{flowId}/assess -> AssessmentsController.Assess"
+      - "QuotesService.list: GET {apiUrl}/v1/quotes -> QuotesController.Search"
+      - "QuotesService.get: GET {apiUrl}/v1/quotes/{flowId} -> QuotesController.Get"
+      - "QuotesService.accept: POST {apiUrl}/v1/quotes/{flowId}/accept -> QuotesController.Accept"
+      - "QuotesService.recalculate: POST {apiUrl}/v1/quotes/{flowId}/recalculate -> QuotesController.Recalculate"
+      - "LeasesService.search: GET {apiUrl}/v1/leases (query q) -> LeasesController.Search"
+      - "LeasesService.get: GET {apiUrl}/v1/leases/{flowId} -> LeasesController.Get"
+      - "LeasesService.document: GET {apiUrl}/v1/leases/{flowId}/document -> LeasesController.GetDocument"
+      - "LeasesService.sign: POST {apiUrl}/v1/leases/{flowId}/sign -> LeasesController.Sign"
+      - "PortfolioService.summary: GET {apiUrl}/v1/admin/portfolio -> AdminController.Portfolio"
+    callCount: 15
+    evidence:
+      - src/app/features/applications/applications.service.ts:10
+      - src/app/features/applications/applications.service.ts:20
+      - src/app/features/applications/applications.service.ts:24
+      - src/app/features/applications/applications.service.ts:28
+      - src/app/features/applications/applications.service.ts:32
+      - src/app/features/assessments/assessments.service.ts:10
+      - src/app/features/assessments/assessments.service.ts:13
+      - src/app/features/assessments/assessments.service.ts:17
+      - src/app/features/quotes/quotes.service.ts:10
+      - src/app/features/quotes/quotes.service.ts:13
+      - src/app/features/quotes/quotes.service.ts:17
+      - src/app/features/quotes/quotes.service.ts:21
+      - src/app/features/quotes/quotes.service.ts:25
+      - src/app/features/leases/leases.service.ts:23
+      - src/app/features/leases/leases.service.ts:27
+      - src/app/features/leases/leases.service.ts:31
+      - src/app/features/leases/leases.service.ts:35
+      - src/app/features/leases/leases.service.ts:39
+      - src/app/features/admin/portfolio.service.ts:17
+    targetEvidence:
+      - lab-leasing:src/Leasing.Host/Controllers/V1/ApplicationsController.cs:14
+      - lab-leasing:src/Leasing.Host/Controllers/V1/AssessmentsController.cs:14
+      - lab-leasing:src/Leasing.Host/Controllers/V1/QuotesController.cs:17
+      - lab-leasing:src/Leasing.Host/Controllers/V1/LeasesController.cs:15
+      - lab-leasing:src/Leasing.Host/Controllers/V1/AdminController.cs:10
+
+  - id: web-unused-endpoints
+    area: http
+    question: Which lab-leasing /v1 endpoints have no caller in lab-web?
+    expected: "GET /v1/assessments/{flowId} (AssessmentsController.Get). The status query of assessments and quotes search is never sent."
+    evidence:
+      - src/app/features/assessments/assessments.service.ts:12
+      - src/app/features/assessments/assessments.service.ts:16
+    targetEvidence:
+      - lab-leasing:src/Leasing.Host/Controllers/V1/AssessmentsController.cs:24
+
+  - id: web-component-calls
+    area: http
+    question: Which components trigger the service calls?
+    expected:
+      - "ApplicationList -> ApplicationsService.search"
+      - "ApplicationDetail -> ApplicationsService.get, review, withdraw"
+      - "AssessmentList -> AssessmentsService.list, assess"
+      - "QuoteList -> QuotesService.list"
+      - "QuoteDetail -> QuotesService.get, recalculate, accept"
+      - "LeaseList -> LeasesService.search"
+      - "LeaseDetail -> LeasesService.get, document, sign"
+      - "Portfolio -> PortfolioService.summary"
+    evidence:
+      - src/app/features/applications/application-list.ts:53
+      - src/app/features/applications/application-detail.ts:33
+      - src/app/features/applications/application-detail.ts:41
+      - src/app/features/applications/application-detail.ts:45
+      - src/app/features/assessments/assessment-list.ts:34
+      - src/app/features/assessments/assessment-list.ts:38
+      - src/app/features/quotes/quote-list.ts:25
+      - src/app/features/quotes/quote-detail.ts:32
+      - src/app/features/quotes/quote-detail.ts:36
+      - src/app/features/quotes/quote-detail.ts:40
+      - src/app/features/leases/lease-list.ts:34
+      - src/app/features/leases/lease-detail.ts:33
+      - src/app/features/leases/lease-detail.ts:36
+      - src/app/features/leases/lease-detail.ts:42
+      - src/app/features/admin/portfolio.ts:24
+
+  - id: web-interceptor
+    area: authorization
+    question: How is the access token attached to requests?
+    expected: The functional interceptor authTokenInterceptor, registered with provideHttpClient(withInterceptors(...)), adds "Authorization Bearer {token}" only to requests whose URL starts with environment.apiUrl. The token is read from sessionStorage.
+    evidence:
+      - src/app/app.config.ts:11
+      - src/app/core/auth/auth-token.interceptor.ts:7
+      - src/app/core/auth/auth-token.interceptor.ts:9
+      - src/app/core/auth/auth-token.interceptor.ts:12
+      - src/app/core/auth/auth-token.service.ts:12
+
+  - id: web-realtime-subscribe
+    area: realtime
+    question: Which SignalR hub and methods does the app subscribe to, and which lab-leasing send matches each?
+    expected:
+      - "Hub URL {apiUrl}/hubs/leasing, token through accessTokenFactory"
+      - "flowUpdated -> lab-leasing FlowProjectionService SendToAll(\"flowUpdated\", ...)"
+      - "taskAssigned -> lab-leasing FlowProjectionService SendToSpecifiedUsers(..., \"taskAssigned\", ...)"
+    evidence:
+      - src/app/core/realtime/leasing-hub.service.ts:20
+      - src/app/core/realtime/leasing-hub.service.ts:41
+      - src/app/core/realtime/leasing-hub.service.ts:42
+      - src/app/app.ts:15
+
+  - id: web-component-input-binding
+    area: routing
+    question: How do detail components receive the flow id?
+    expected: Through router input binding (withComponentInputBinding); the ':flowId' route parameter binds to the component input flowId.
+    evidence:
+      - src/app/app.config.ts:10
+      - src/app/features/applications/applications.routes.ts:5
